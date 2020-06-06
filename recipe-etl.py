@@ -5,9 +5,10 @@ import pandas as pd
 import time
 import hashlib
 from requests.auth import HTTPBasicAuth
-import pymysql
+#import pymysql
 import sqlalchemy
 import os
+import sys
 import yaml
 
 from yaml import load, dump
@@ -19,13 +20,13 @@ from oauth2client import tools
 from oauth2client.file import Storage
 
 def main():
-
+    limit = None
     
     db = MySQL_DB()
     pr = PaprikaRecipe()
     pr.fetch_recipes()
     pr.fetch_categories()
-    pr.sync_recipes(limit=None)
+    pr.sync_recipes(limit=limit)
     pr.sync_categories()
     pr.sync_recipes_to_db(db.conn)
 
@@ -39,7 +40,7 @@ class MySQL_DB:
     def __init__(self):
 
         with open(r'settings.yaml') as file:
-            settings = yaml.full_load(file)
+            settings = yaml.load(file)
 
             environment = 'database_'+ settings['environment']
 
@@ -55,7 +56,7 @@ class PaprikaRecipe:
     def __init__(self):
         print ("-"*20, "Initializing PaprikaRecipe")
         with open(r'settings.yaml') as file:
-            settings = yaml.full_load(file)
+            settings = yaml.load(file)
 
             self.u = settings['paprika']['user']
             self.p = settings['paprika']['pass']
@@ -80,7 +81,8 @@ class PaprikaRecipe:
     
     def fetch_recipe(self, recipe_uid):
         """Fetches metadata for individual recipe"""
-        print(".", end="")
+        sys.stdout.write(str('.'))
+        sys.stdout.flush()
         url = 'https://www.paprikaapp.com/api/v1/sync/recipe/{}/'.format(recipe_uid)
         
         try:
@@ -159,8 +161,8 @@ class PaprikaRecipe:
         """
 
         try:
-            db_conn.execute("use recipes")
-            db_conn.execute("drop table if exists recipes.recipe_paprika;")
+            #db_conn.execute("use recipes")
+            db_conn.execute("drop table if exists recipe_paprika;")
             db_conn.execute(ddl)
             print (" --> dropped and recreated recipes table")
         except Exception as e:
@@ -178,7 +180,7 @@ class PaprikaRecipe:
             #print (df_recipes[fields])
             print (" --> saving {} recipes to recipe_paprika ...".format(len(df_recipes)))
             df_recipes[fields].to_sql(con=db_conn, 
-                                      schema='recipes',
+                                      #schema='recipes',
                                       name='recipe_paprika', 
                                       if_exists='append',
                                       index=False)

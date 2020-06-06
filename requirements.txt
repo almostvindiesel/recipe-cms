@@ -1,0 +1,10 @@
+pyyaml
+numpy
+pandas
+requests
+numpy
+sqlalchemy
+flask-mysql
+mysql-connector-python
+google-api-python-client
+oauth2client
